@@ -560,11 +560,13 @@ public class Parser {
                     ExpNode right = null;
 
                     LinkedList<ExpNode> lvalues = new LinkedList<>();
+                    HashSet<String> checkSet = new HashSet<>();
 
                     left = parseLValue(
                             recoverSet.union(Token.ASSIGN, Token.EQUALS, Token.COMMA));
 
                     // Check duplicate variable
+                    checkSet.add(((ExpNode.IdentifierNode)left).getId());
                     lvalues.add(left);
 
                     while(tokens.isMatch(Token.COMMA)){
@@ -572,7 +574,12 @@ public class Parser {
                         left = parseLValue(
                                 recoverSet.union(Token.ASSIGN, Token.EQUALS, Token.COMMA));
 
+                        checkSet.add(((ExpNode.IdentifierNode)left).getId());
                         lvalues.add(left);
+                        if( checkSet.size() != lvalues.size() ) {
+                            errors.error(" repeated variable on left", loc);
+                            return null;
+                        }
                     };
 
                     loc = tokens.getLocation();
