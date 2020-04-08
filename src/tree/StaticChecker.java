@@ -139,6 +139,17 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
     }
 
     /**
+     * Execute code for a assignment list - executes each assignment sequentially
+     */
+    public void visitAssignmentListNode(StatementNode.AssignmentListNode node) {
+        beginCheck("AssignmentList");
+        for (StatementNode statement : node.getAssignments()) {
+            statement.accept(this);
+        }
+        endCheck("AssignmentList");
+    }
+
+    /**
      * Reads an integer value from input
      */
     public void visitReadNode(StatementNode.ReadNode node) {

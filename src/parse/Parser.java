@@ -1,6 +1,7 @@
 package parse;
 
 import java.util.*;
+import java.util.LinkedList;
 
 import syms.Predefined;
 import syms.Scope;
@@ -541,28 +542,76 @@ public class Parser {
                 });
     }
 
-    private final ParseMethod<StatementNode.AssignmentNode> assign =
-            new ParseMethod<>(
-                    (Location loc) -> new StatementNode.AssignmentNode(loc,
-                            new ExpNode.ErrorNode(loc), new ExpNode.ErrorNode(loc)));
+    private final ParseMethod<StatementNode.AssignmentListNode> assign =
+            new ParseMethod<>( (Location loc) -> new StatementNode.AssignmentListNode(loc,new LinkedList<StatementNode.AssignmentNode>()) );
 
     /**
      * Rule: Assignment -> LValue ASSIGN Condition
      */
-    private StatementNode.AssignmentNode parseAssignment(TokenSet recoverSet) {
+    private StatementNode.AssignmentListNode parseAssignment(TokenSet recoverSet) {
         return assign.parse("Assignment", LVALUE_START_SET, recoverSet,
                 () -> {
                     /* The current token is in LVALUE_START_SET.
                      * Non-standard recovery set includes EQUALS because a
                      * common syntax error is to use EQUALS instead of ASSIGN.
                      */
-                    ExpNode left = parseLValue(
-                            recoverSet.union(Token.ASSIGN, Token.EQUALS));
                     Location loc = tokens.getLocation();
+                    ExpNode left = null;
+                    ExpNode right = null;
+
+                    LinkedList<ExpNode> lvalues = new LinkedList<>();
+
+                    left = parseLValue(
+                            recoverSet.union(Token.ASSIGN, Token.EQUALS, Token.COMMA));
+
+                    // Check duplicate variable
+                    lvalues.add(left);
+
+                    while(tokens.isMatch(Token.COMMA)){
+                        tokens.match(Token.COMMA, LVALUE_START_SET);
+                        left = parseLValue(
+                                recoverSet.union(Token.ASSIGN, Token.EQUALS, Token.COMMA));
+
+                        lvalues.add(left);
+                    };
+
+                    loc = tokens.getLocation();
                     tokens.match(Token.ASSIGN, CONDITION_START_SET);
-                    ExpNode right = parseCondition(recoverSet);
-                    return new StatementNode.AssignmentNode(loc, left, right);
+
+                    if( tokens.isMatch(Token.SEMICOLON)) {
+                        errors.error(" too few expressions (syntax error)", loc);
+                        return null;
+                    }
+                    StatementNode.AssignmentNode s = null;
+                    List<StatementNode.AssignmentNode> stmts = new LinkedList<>();
+
+                    right = parseCondition(recoverSet.union(Token.COMMA));
+
+                    if( lvalues.size() == 0 ) {
+                        errors.error(" too few lvalues", loc);
+                        return null;
+                    }
+                    left = lvalues.removeFirst();
+
+                    s = new StatementNode.AssignmentNode(loc, left, right);
+                    stmts.add(s);
+
+                    while(tokens.isMatch(Token.COMMA)) {
+                        tokens.match(Token.COMMA, CONDITION_START_SET);
+
+                        if( lvalues.size() == 0 ) {
+                            errors.error(" too few lvalues", loc);
+                            return null;
+                        }
+                        left = lvalues.removeFirst();
+
+                        right = parseCondition(recoverSet.union(Token.COMMA));
+                        s = new StatementNode.AssignmentNode(loc, left, right);
+                        stmts.add(s);
+                    }
+                    return new StatementNode.AssignmentListNode(loc, stmts);
                 });
+
     }
 
     /**

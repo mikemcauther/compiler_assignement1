@@ -182,6 +182,38 @@ public abstract class StatementNode {
     }
 
     /**
+     * Tree node representing a statement list.
+     */
+    public static class AssignmentListNode extends StatementNode {
+        private final List<StatementNode.AssignmentNode> assignments;
+
+        public AssignmentListNode(Location loc, List<StatementNode.AssignmentNode> sl) {
+            super(loc);
+            this.assignments = sl;
+        }
+
+        @Override
+        public void accept(StatementVisitor visitor) {
+            visitor.visitAssignmentListNode(this);
+        }
+
+        public List<AssignmentNode> getAssignments() {
+            return assignments;
+        }
+
+        @Override
+        public String toString(int level) {
+            StringBuilder result = new StringBuilder();
+            String sep = "";
+            for (StatementNode.AssignmentNode s : assignments) {
+                result.append(sep).append(s.toString(level));
+                sep = ";" + newLine(level);
+            }
+            return result.toString();
+        }
+    }
+
+    /**
      * Tree node representing a "read" statement.
      */
     public static class ReadNode extends StatementNode {

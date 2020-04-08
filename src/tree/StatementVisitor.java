@@ -16,6 +16,8 @@ public interface StatementVisitor {
 
     void visitAssignmentNode(StatementNode.AssignmentNode node);
 
+    void visitAssignmentListNode(StatementNode.AssignmentListNode node);
+
     void visitReadNode(StatementNode.ReadNode node);
 
     void visitWriteNode(StatementNode.WriteNode node);

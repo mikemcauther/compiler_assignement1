@@ -137,6 +137,17 @@ public class Interpreter implements StatementVisitor, ExpTransform<Value> {
     }
 
     /**
+     * Execute code for a assignment list - executes each assignment sequentially
+     */
+    public void visitAssignmentListNode(StatementNode.AssignmentListNode node) {
+        beginExec("AssignmentList");
+        for (StatementNode statement : node.getAssignments()) {
+            statement.accept(this);
+        }
+        endExec("AssignmentList");
+    }
+
+    /**
      * Expression evaluation for a read expression - read an int from stdin
      */
     public void visitReadNode(StatementNode.ReadNode node) {
