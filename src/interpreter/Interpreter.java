@@ -252,6 +252,14 @@ public class Interpreter implements StatementVisitor, ExpTransform<Value> {
     }
 
     /**
+     * Skip statement node
+     */
+    public void visitSkipNode(StatementNode.SkipNode node) {
+        beginExec("Skip");
+        endExec("Skip");
+    }
+
+    /**
      * Execute code for a while statement
      */
     public void visitWhileNode(StatementNode.WhileNode node) {

@@ -468,7 +468,7 @@ public class Parser {
     private final static TokenSet STATEMENT_START_SET =
             LVALUE_START_SET.union(Token.KW_WHILE, Token.KW_IF,
                     Token.KW_READ, Token.KW_WRITE,
-                    Token.KW_CALL, Token.KW_BEGIN, Token.KW_DO);
+                    Token.KW_CALL, Token.KW_BEGIN, Token.KW_DO, Token.KW_SKIP);
 
     /**
      * Rule: CompoundStatement -> BEGIN StatementList END
@@ -536,6 +536,8 @@ public class Parser {
                             return parseCallStatement(recoverSet);
                         case KW_BEGIN:
                             return parseCompoundStatement(recoverSet);
+                        case KW_SKIP:
+                            return parseSkipStatement(recoverSet);
                         default:
                             fatal("parseStatement");
                             // To keep the Java compiler happy - can't reach here
@@ -624,6 +626,19 @@ public class Parser {
     }
 
     /**
+     * Rule: SkipStatement -> KW_SKIP
+     */
+    private StatementNode parseSkipStatement(TokenSet recoverSet) {
+        return stmt.parse("Skip Statement", Token.KW_SKIP, recoverSet,
+                () -> {
+                    /* The current token is KW_SKIP */
+                    tokens.match(Token.KW_SKIP); /* cannot fail */
+                    Location loc = tokens.getLocation();
+                    return new StatementNode.SkipNode(loc);
+                });
+    }
+
+    /**
      * Rule: WhileStatement -> KW_WHILE Condition KW_DO Statement
      */
     private StatementNode parseWhileStatement(TokenSet recoverSet) {
@@ -641,7 +656,7 @@ public class Parser {
 
 
     /**
-     * Rule: WhileStatement -> KW_DO doBranch List KW_OD Statement
+     * Rule: DoStatement -> KW_DO doBranch List KW_OD Statement
      */
     private StatementNode parseDoStatement(TokenSet recoverSet) {
         return stmt.parse("DoStatement", Token.KW_DO, recoverSet,

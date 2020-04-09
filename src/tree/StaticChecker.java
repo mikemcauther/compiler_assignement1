@@ -258,6 +258,14 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
     }
 
     /**
+     * Skip statement node
+     */
+    public void visitSkipNode(StatementNode.SkipNode node) {
+        beginCheck("Skip");
+        endCheck("Skip");
+    }
+
+    /**
      * While statement node
      */
     public void visitWhileNode(StatementNode.WhileNode node) {

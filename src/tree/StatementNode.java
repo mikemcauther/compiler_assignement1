@@ -388,6 +388,27 @@ public abstract class StatementNode {
     }
 
     /**
+     * Tree node representing a "skip" statement.
+     */
+    public static class SkipNode extends StatementNode {
+
+        public SkipNode(Location loc) {
+            super(loc);
+        }
+
+        @Override
+        public void accept(StatementVisitor visitor) {
+            visitor.visitSkipNode(this);
+        }
+
+
+        @Override
+        public String toString(int level) {
+            return "SKIP";
+        }
+    }
+
+    /**
      * Tree node representing a "while" statement.
      */
     public static class WhileNode extends StatementNode {
