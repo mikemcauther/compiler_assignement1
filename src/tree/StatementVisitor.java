@@ -28,4 +28,8 @@ public interface StatementVisitor {
 
     void visitWhileNode(StatementNode.WhileNode node);
 
+    void visitDoStatementNode(StatementNode.DoStatementNode node);
+
+    void visitDoBranchNode(StatementNode.DoBranchNode node);
+
 }

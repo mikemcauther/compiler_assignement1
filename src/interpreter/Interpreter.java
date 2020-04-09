@@ -148,6 +148,48 @@ public class Interpreter implements StatementVisitor, ExpTransform<Value> {
     }
 
     /**
+     * Execute code for a Do Statement - executes each assignment sequentially
+     */
+    public void visitDoStatementNode(StatementNode.DoStatementNode node) {
+        beginExec("DoStatementNode");
+        int anyTrue = Type.FALSE_VALUE;
+        int isExit = Type.FALSE_VALUE;
+
+        while (isExit == Type.FALSE_VALUE) {
+            anyTrue = Type.FALSE_VALUE;
+            isExit = Type.FALSE_VALUE;
+            for (StatementNode.DoBranchNode doBranch : node.getListDoBranch()) {
+                ExpNode condition = doBranch.getCondition();
+                if( condition.evaluate(this).getInteger() == Type.TRUE_VALUE ) {
+                    doBranch.accept(this);
+                    anyTrue = Type.TRUE_VALUE;
+                    if( doBranch.getIsExit() == Type.TRUE_VALUE ) {
+                        isExit = Type.TRUE_VALUE;
+                    }
+                }
+            }
+
+            if( anyTrue == Type.FALSE_VALUE ) {
+                runtime("no branch has true condition", node.getLocation(),
+                        currentFrame);
+                return ;
+            }
+        }
+        endExec("DoStatementNode");
+    }
+
+    /**
+     * Execute code for a DoBranch - executes each assignment sequentially
+     */
+    public void visitDoBranchNode(StatementNode.DoBranchNode node) {
+        beginExec("DoBranchNode");
+
+        StatementNode statement = node.getListStmt();
+        statement.accept(this);
+        endExec("DoBranchNode");
+    }
+
+    /**
      * Expression evaluation for a read expression - read an int from stdin
      */
     public void visitReadNode(StatementNode.ReadNode node) {

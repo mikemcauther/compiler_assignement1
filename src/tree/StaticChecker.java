@@ -150,6 +150,30 @@ public class StaticChecker implements DeclVisitor, StatementVisitor,
     }
 
     /**
+     * Execute code for a Do Statement - executes each assignment sequentially
+     */
+    public void visitDoStatementNode(StatementNode.DoStatementNode node) {
+        beginCheck("DoStatementNode");
+        for (StatementNode.DoBranchNode doBranch : node.getListDoBranch()) {
+            doBranch.accept(this);
+        }
+        endCheck("DoStatementNode");
+    }
+
+    /**
+     * Execute code for a DoBranch - executes each assignment sequentially
+     */
+    public void visitDoBranchNode(StatementNode.DoBranchNode node) {
+        beginCheck("DoBranchNode");
+
+        // Check the condition and replace with (possibly) transformed node
+        node.setCondition(checkCondition(node.getCondition()));
+        StatementNode statement = node.getListStmt();
+        statement.accept(this);
+        endCheck("DoBranchNode");
+    }
+
+    /**
      * Reads an integer value from input
      */
     public void visitReadNode(StatementNode.ReadNode node) {

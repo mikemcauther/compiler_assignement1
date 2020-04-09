@@ -468,7 +468,7 @@ public class Parser {
     private final static TokenSet STATEMENT_START_SET =
             LVALUE_START_SET.union(Token.KW_WHILE, Token.KW_IF,
                     Token.KW_READ, Token.KW_WRITE,
-                    Token.KW_CALL, Token.KW_BEGIN);
+                    Token.KW_CALL, Token.KW_BEGIN, Token.KW_DO);
 
     /**
      * Rule: CompoundStatement -> BEGIN StatementList END
@@ -522,6 +522,8 @@ public class Parser {
                     switch (tokens.getKind()) {
                         case IDENTIFIER:
                             return parseAssignment(recoverSet);
+                        case KW_DO:
+                            return parseDoStatement(recoverSet);
                         case KW_WHILE:
                             return parseWhileStatement(recoverSet);
                         case KW_IF:
@@ -634,6 +636,59 @@ public class Parser {
                     tokens.match(Token.KW_DO, STATEMENT_START_SET);
                     StatementNode statement = parseStatement(recoverSet);
                     return new StatementNode.WhileNode(loc, cond, statement);
+                });
+    }
+
+
+    /**
+     * Rule: WhileStatement -> KW_DO doBranch List KW_OD Statement
+     */
+    private StatementNode parseDoStatement(TokenSet recoverSet) {
+        return stmt.parse("DoStatement", Token.KW_DO, recoverSet,
+                () -> {
+                    /* The current token is KW_WHILE */
+                    tokens.match(Token.KW_DO); /* cannot fail */
+                    Location loc = tokens.getLocation();
+                    int isExit = Type.FALSE_VALUE;
+
+                    List<StatementNode.DoBranchNode> doBranches = new LinkedList<>();
+                    StatementNode.DoBranchNode doBranch;
+
+                    ExpNode cond = parseCondition(recoverSet.union(Token.KW_THEN));
+                    tokens.match(Token.KW_THEN, STATEMENT_START_SET);
+
+                    StatementNode statementList =
+                            parseStatementList(recoverSet.union(Token.KW_OD,Token.KW_EXIT,Token.SEPARATOR));
+
+                    if( tokens.isMatch(Token.KW_EXIT) ) {
+                        tokens.match(Token.KW_EXIT);
+                        isExit = Type.TRUE_VALUE;
+                    } else {
+                        isExit = Type.FALSE_VALUE;
+                    }
+                    doBranch = new StatementNode.DoBranchNode(loc, cond,statementList, isExit);
+                    doBranches.add(doBranch);
+
+                    while(tokens.isMatch(Token.SEPARATOR)) {
+                        tokens.match(Token.SEPARATOR, CONDITION_START_SET);
+
+                        cond = parseCondition(recoverSet.union(Token.KW_THEN));
+                        tokens.match(Token.KW_THEN, STATEMENT_START_SET);
+
+                        statementList =
+                                parseStatementList(recoverSet.union(Token.KW_OD,Token.KW_EXIT,Token.SEPARATOR));
+
+                        if( tokens.isMatch(Token.KW_EXIT) ) {
+                            tokens.match(Token.KW_EXIT);
+                            isExit = Type.TRUE_VALUE;
+                        } else {
+                            isExit = Type.FALSE_VALUE;
+                        }
+                        doBranch = new StatementNode.DoBranchNode(loc, cond,statementList, isExit);
+                        doBranches.add(doBranch);
+                    }
+                    tokens.match(Token.KW_OD);
+                    return new StatementNode.DoStatementNode(loc, doBranches);
                 });
     }
 

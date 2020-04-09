@@ -5,6 +5,7 @@ import java.util.*;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import syms.Scope;
 import syms.SymEntry;
+import syms.Type;
 
 /**
  * class StatementNode - Abstract syntax tree representation of statements.
@@ -421,6 +422,81 @@ public abstract class StatementNode {
         public String toString(int level) {
             return "WHILE " + condition.toString() + " DO" +
                     newLine(level + 1) + loopStmt.toString(level + 1);
+        }
+    }
+
+    /**
+     * Tree node representing a "do/od" statement.
+     */
+    public static class DoStatementNode extends StatementNode {
+        private final List<StatementNode.DoBranchNode> doBranches;
+
+        public DoStatementNode(Location loc, List<StatementNode.DoBranchNode> doBranches) {
+            super(loc);
+            this.doBranches = doBranches;
+        }
+
+        @Override
+        public void accept(StatementVisitor visitor) {
+            visitor.visitDoStatementNode(this);
+        }
+
+        public List<StatementNode.DoBranchNode> getListDoBranch() {
+            return doBranches;
+        }
+
+        @Override
+        public String toString(int level) {
+            StringBuilder result = new StringBuilder();
+            String sep = "";
+            for (StatementNode.DoBranchNode s : doBranches) {
+                result.append(sep).append(s.toString(level));
+                sep = ";" + newLine(level);
+            }
+            return result.toString();
+        }
+    }
+
+    /**
+     * Tree node representing a "do/od" statement.
+     */
+    public static class DoBranchNode extends StatementNode {
+        private ExpNode condition;
+        private final StatementNode statementList;
+        private int isExit = Type.FALSE_VALUE;
+
+        public DoBranchNode(Location loc, ExpNode condition,
+                         StatementNode statementList, int isExit) {
+            super(loc);
+            this.condition = condition;
+            this.statementList = statementList;
+            this.isExit = isExit;
+        }
+
+        @Override
+        public void accept(StatementVisitor visitor) {
+            visitor.visitDoBranchNode(this);
+        }
+
+        public int getIsExit() {
+            return isExit;
+        }
+
+        public ExpNode getCondition() {
+            return condition;
+        }
+
+        public void setCondition(ExpNode cond) {
+            this.condition = cond;
+        }
+
+        public StatementNode getListStmt() {
+            return statementList;
+        }
+
+        @Override
+        public String toString(int level) {
+            return  statementList.toString(level + 1);
         }
     }
 }
