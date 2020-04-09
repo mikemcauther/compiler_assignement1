@@ -546,13 +546,13 @@ public class Parser {
                 });
     }
 
-    private final ParseMethod<StatementNode.AssignmentListNode> assign =
-            new ParseMethod<>( (Location loc) -> new StatementNode.AssignmentListNode(loc,new LinkedList<StatementNode.AssignmentNode>()) );
+    private final ParseMethod<StatementNode> assign =
+            new ParseMethod<>( (Location loc) -> new StatementNode.ErrorNode(loc) );
 
     /**
      * Rule: Assignment -> LValue ASSIGN Condition
      */
-    private StatementNode.AssignmentListNode parseAssignment(TokenSet recoverSet) {
+    private StatementNode parseAssignment(TokenSet recoverSet) {
         return assign.parse("Assignment", LVALUE_START_SET, recoverSet,
                 () -> {
                     /* The current token is in LVALUE_START_SET.
@@ -582,7 +582,7 @@ public class Parser {
                         lvalues.add(left);
                         if( checkSet.size() != lvalues.size() ) {
                             errors.error(" repeated variable on left", loc);
-                            return null;
+                            return new StatementNode.AssignmentNode(loc, new ExpNode.ErrorNode(loc), new ExpNode.ErrorNode(loc));
                         }
                     };
 
@@ -591,16 +591,16 @@ public class Parser {
 
                     if( tokens.isMatch(Token.SEMICOLON)) {
                         errors.error(" too few expressions (syntax error)", loc);
-                        return null;
+                        return new StatementNode.AssignmentNode(loc, new ExpNode.ErrorNode(loc), new ExpNode.ErrorNode(loc));
                     }
                     StatementNode.AssignmentNode s = null;
-                    List<StatementNode.AssignmentNode> stmts = new LinkedList<>();
+                    List<StatementNode> stmts = new LinkedList<>();
 
                     right = parseCondition(recoverSet.union(Token.COMMA));
 
                     if( lvalues.size() == 0 ) {
                         errors.error(" too few lvalues", loc);
-                        return null;
+                        return new StatementNode.AssignmentNode(loc, new ExpNode.ErrorNode(loc), new ExpNode.ErrorNode(loc));
                     }
                     left = lvalues.removeFirst();
 
@@ -612,7 +612,7 @@ public class Parser {
 
                         if( lvalues.size() == 0 ) {
                             errors.error(" too few lvalues", loc);
-                            return null;
+                            return new StatementNode.AssignmentNode(loc, new ExpNode.ErrorNode(loc), new ExpNode.ErrorNode(loc));
                         }
                         left = lvalues.removeFirst();
 
@@ -669,7 +669,8 @@ public class Parser {
                     List<StatementNode.DoBranchNode> doBranches = new LinkedList<>();
                     StatementNode.DoBranchNode doBranch;
 
-                    ExpNode cond = parseCondition(recoverSet.union(Token.KW_THEN));
+                    //ExpNode cond = parseCondition(recoverSet.union(Token.KW_THEN));
+                    ExpNode cond = parseCondition(new TokenSet(Token.KW_THEN));
                     tokens.match(Token.KW_THEN, STATEMENT_START_SET);
 
                     StatementNode statementList =

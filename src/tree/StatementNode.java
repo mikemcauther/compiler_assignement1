@@ -186,9 +186,9 @@ public abstract class StatementNode {
      * Tree node representing a statement list.
      */
     public static class AssignmentListNode extends StatementNode {
-        private final List<StatementNode.AssignmentNode> assignments;
+        private final List<StatementNode> assignments;
 
-        public AssignmentListNode(Location loc, List<StatementNode.AssignmentNode> sl) {
+        public AssignmentListNode(Location loc, List<StatementNode> sl) {
             super(loc);
             this.assignments = sl;
         }
@@ -198,7 +198,7 @@ public abstract class StatementNode {
             visitor.visitAssignmentListNode(this);
         }
 
-        public List<AssignmentNode> getAssignments() {
+        public List<StatementNode> getAssignments() {
             return assignments;
         }
 
@@ -206,7 +206,7 @@ public abstract class StatementNode {
         public String toString(int level) {
             StringBuilder result = new StringBuilder();
             String sep = "";
-            for (StatementNode.AssignmentNode s : assignments) {
+            for (StatementNode s : assignments) {
                 result.append(sep).append(s.toString(level));
                 sep = ";" + newLine(level);
             }
