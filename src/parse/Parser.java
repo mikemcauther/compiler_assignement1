@@ -661,7 +661,7 @@ public class Parser {
                             parseStatementList(recoverSet.union(Token.KW_OD,Token.KW_EXIT,Token.SEPARATOR));
 
                     if( tokens.isMatch(Token.KW_EXIT) ) {
-                        tokens.match(Token.KW_EXIT);
+                        tokens.match(Token.KW_EXIT,recoverSet.union(Token.SEPARATOR,Token.KW_OD));
                         isExit = Type.TRUE_VALUE;
                     } else {
                         isExit = Type.FALSE_VALUE;
@@ -687,7 +687,7 @@ public class Parser {
                         doBranch = new StatementNode.DoBranchNode(loc, cond,statementList, isExit);
                         doBranches.add(doBranch);
                     }
-                    tokens.match(Token.KW_OD);
+                    tokens.match(Token.KW_OD,recoverSet.union(Token.KW_END,Token.SEMICOLON));
                     return new StatementNode.DoStatementNode(loc, doBranches);
                 });
     }
